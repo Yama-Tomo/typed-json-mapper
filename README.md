@@ -116,9 +116,9 @@ if (err) {
 
 /*
 mapper => Mapper {
-  nullableStr: "111",
-  num: 0,
-  str: "",
+  str: '',
+  num: -1,
+  nullableStr: '111',
 }
 */
 ```
