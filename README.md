@@ -30,7 +30,9 @@ class Mapper extends TypedJsonMapper {
 }
 
 // ------------------
-const [mapper, err] = Mapper.map({ str: 'str', num: 123, bool: true, nil: null, array_of_strings: ['a', 'b'] });
+const [mapper, err] = Mapper.map({
+  str: 'str', num: 123, bool: true, nil: null, array_of_strings: ['a', 'b']
+});
 
 /*
 mapper => Mapper {
@@ -102,7 +104,7 @@ class Mapper extends TypedJsonMapper {
   @map(toNullableString) nullableStr: string | null = 'default';
 }
 
-const [mapper, err] = Mapper.map({ nullable_str: 111 }); 
+const [mapper, err] = Mapper.map({ num: 'string', nullable_str: 111 });
 if (err) {
   // something error handling
   /* 
@@ -117,7 +119,7 @@ if (err) {
 /*
 mapper => Mapper {
   str: '',
-  num: -1,
+  num: 0,
   nullableStr: '111',
 }
 */
@@ -126,7 +128,7 @@ mapper => Mapper {
 # limitation
 
 - Can't use Non-null assertion operator.
-- Can't use undefined type for property, use `null` instead
+- Can't use `undefined` type for property, use `null` instead
 
 # linter
 
