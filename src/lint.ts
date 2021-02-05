@@ -6,7 +6,7 @@ import yargs from 'yargs';
 
 const main = () => {
   const args = yargs(process.argv.splice(2))
-    .usage('Usage: check-mapper-code [-c] [-q | --quiet] [-v | --version] <check file path>')
+    .usage('Usage: mapper-code-lint [-c] [-q | --quiet] [-v | --version] <check file path>')
     .options({
       c: { type: 'string', default: './tsconfig.json', description: '`tsconfig.json` path' },
       q: { type: 'boolean', alias: 'quiet', default: false, description: 'hide error messages' },
