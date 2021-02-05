@@ -1,5 +1,7 @@
 # typed-json-mapper
 
+![test](https://github.com/Yama-Tomo/typed-json-mapper/workflows/test/badge.svg?branch=master)
+
 Type-safe json mapper
 
 # install
@@ -17,7 +19,7 @@ $ yarn add @yamatomo/typed-json-mapper
 ## basic
 
 ```ts
-import { TypedJsonMapper, map } from 'typed-json-mapper';
+import { TypedJsonMapper, map } from '@yamatomo/typed-json-mapper';
 
 class Mapper extends TypedJsonMapper {
   str = '';
@@ -60,7 +62,7 @@ class Mapper extends TypedJsonMapper {
   - Implement a mapper functions, and pass it to `@map` decorator.
   
 ```ts
-import { TypedJsonMapper, map, Errors } from 'typed-json-mapper';
+import { TypedJsonMapper, map, Errors } from '@yamatomo/typed-json-mapper';
 
 // you should implement mapper class
 class CustomType extends TypedJsonMapper {
