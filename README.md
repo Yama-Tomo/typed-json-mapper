@@ -2,6 +2,16 @@
 
 Type-safe json mapper
 
+# install
+
+```bash
+$ npm install --save @yamatomo/typed-json-mapper
+
+or
+
+$ yarn add @yamatomo/typed-json-mapper
+```
+
 # usage
 
 ## basic
