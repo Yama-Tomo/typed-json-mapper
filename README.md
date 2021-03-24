@@ -107,12 +107,12 @@ class Mapper extends TypedJsonMapper {
 const [mapper, err] = Mapper.map({ num: 'string', nullable_str: 111 });
 if (err) {
   // something error handling
-  /* 
+  /*
   err => [
     '`Mapper.str` not exists mapping value.',
     '`Mapper.num` type mismatch. expected-type: `number` actual: `"string"`',
     '`Mapper.nullableStr` -> data type is number!'
-  ] 
+  ]
   */
 }
 
@@ -124,6 +124,32 @@ mapper => Mapper {
 }
 */
 ```
+
+## ignore errors only for specific key
+
+Use `@ignoreError` decorator.
+
+```ts
+class Mapper extends TypedJsonMapper {
+  @ignoreError str = '';
+}
+
+const [mapper, err] = Mapper.map({ str: 1111 });
+/*
+mapper => Mapper {
+  str: '1111',
+}
+*/
+
+/*
+err => undefined
+*/
+```
+
+# options
+
+- disableTransformKeys (default: true)
+  - Disable snake-case to camel-case transform of keys when mapping.
 
 # limitation
 
