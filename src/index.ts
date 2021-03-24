@@ -15,24 +15,33 @@ const map = (mapper: CustomMapper) => (target: TypedJsonMapper, propertyKey: str
   Reflect.defineMetadata(metadataKeyCustomMapper, mapper, target, propertyKey);
 };
 
+type Options = {
+  disableTransformKeys?: boolean;
+};
+
 class TypedJsonMapper {
-  static map<T extends typeof TypedJsonMapper>(this: T, data: unknown): [InstanceType<T>, Errors] {
-    return mapData(this, data);
+  static map<T extends typeof TypedJsonMapper>(
+    this: T,
+    data: unknown,
+    options?: Options
+  ): [InstanceType<T>, Errors] {
+    return mapData(this, data, options);
   }
 }
 
 const mapData = <T extends typeof TypedJsonMapper>(
   klass: T,
-  data: unknown
+  data: unknown,
+  options?: Options
 ): [InstanceType<T>, Errors] => {
   const instance = new klass() as InstanceType<T>;
   const className = instance.constructor.name;
   const errors: string[] = [];
 
   Object.keys(instance).forEach((key) => {
-    const snakeCaseKey = toSnakeCase(key);
+    const convertKey = options?.disableTransformKeys === true ? key : toSnakeCase(key);
 
-    if (!hasKey(data, snakeCaseKey)) {
+    if (!hasKey(data, convertKey)) {
       errors.push(`\`${className}.${key}\` not exists mapping value.`);
       return;
     }
@@ -40,7 +49,7 @@ const mapData = <T extends typeof TypedJsonMapper>(
     const castKey = key as keyof typeof instance;
     const type = getType(instance, castKey);
     const customMapper = Reflect.getMetadata(metadataKeyCustomMapper, instance, key);
-    const mapData = data[snakeCaseKey];
+    const mapData = data[convertKey];
 
     instance[castKey] = cast(className, mapData, key, type, errors, customMapper);
   });
@@ -192,4 +201,4 @@ const toCustomType = (val: unknown, customMapper: CustomMapper) => {
   return !Array.isArray(castVal) ? ([castVal, undefined] as const) : castVal;
 };
 
-export { map, TypedJsonMapper, Errors, CustomMapperFunc, CustomMapper };
+export { map, ignoreError, TypedJsonMapper, Errors, CustomMapperFunc, CustomMapper, Options };
