@@ -148,7 +148,7 @@ err => undefined
 
 # options
 
-- disableTransformKeys (default: true)
+- disableTransformKeys (default: false)
   - Disable snake-case to camel-case transform of keys when mapping.
 
 # limitation
