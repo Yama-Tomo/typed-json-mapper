@@ -89,7 +89,7 @@ const checkFile = (program: ts.Program, checker: ts.TypeChecker, file: string): 
       return;
     }
 
-    const errors = checkClassPropertyTypes(checker, classType, classSymbol);
+    const errors = checkClassPropertyTypes(source, checker, classType, classSymbol);
     if (errors.length) {
       errorEveryClass[classSymbol.name] = errors;
     }
@@ -99,6 +99,7 @@ const checkFile = (program: ts.Program, checker: ts.TypeChecker, file: string): 
 };
 
 const checkClassPropertyTypes = (
+  sourceFile: ts.SourceFile,
   checker: ts.TypeChecker,
   classType: ts.Type,
   classSymbol: ts.Symbol
@@ -157,6 +158,7 @@ const checkClassPropertyTypes = (
 
     const errors = detectErrors(
       property.name,
+      sourceFile.getLineAndCharacterOfPosition(property.declarations[0].getStart()),
       propertyType,
       useNonNullAssertion,
       customMapperReturnTypes
@@ -198,23 +200,24 @@ const getTypeString = (checker: ts.TypeChecker, symbol: ts.Symbol): string => {
 
 const detectErrors = (
   propertyName: string,
+  lineAndCharacter: ts.LineAndCharacter,
   propertyType: string,
   useNonNullAssertion: boolean,
   customMapperReturnTypes: string[]
 ): ErrorMessages => {
   if (propertyType === 'undefined') {
     // prettier-ignore
-    return [createErrorMessage(propertyName, `can't use only undefined type. use \`null\` instead`)];
+    return [createErrorMessage(propertyName, lineAndCharacter, `can't use only undefined type. use \`null\` instead`)];
   }
 
   if (useNonNullAssertion) {
     // prettier-ignore
-    return [createErrorMessage(propertyName, `can't use Non-null assertion operator. property initialization is required`)];
+    return [createErrorMessage(propertyName, lineAndCharacter, `can't use Non-null assertion operator. property initialization is required`)];
   }
 
   if (customMapperReturnTypes.length > 1) {
     // prettier-ignore
-    return [createErrorMessage(propertyName, '`@map` decorator is called multiple times. it must be called only once.')];
+    return [createErrorMessage(propertyName, lineAndCharacter, '`@map` decorator is called multiple times. it must be called only once.')];
   }
 
   const customMapperReturnType = normalizeCustomMapperReturnType(customMapperReturnTypes[0]);
@@ -222,13 +225,19 @@ const detectErrors = (
   const isArrayType = propertyType.includes('[]');
   if (isArrayType) {
     if (!customMapperReturnType) {
-      return [createErrorMessage(propertyName, '`@map` decorator required if array type property')];
+      return [
+        createErrorMessage(
+          propertyName,
+          lineAndCharacter,
+          '`@map` decorator required if array type property'
+        ),
+      ];
     }
 
     const unwrapArrayType = propertyType.replace(/[[\]()]/g, '');
     if (unwrapArrayType !== customMapperReturnType) {
       return [
-        createErrorMessage(propertyName, 'type mismatch'),
+        createErrorMessage(propertyName, lineAndCharacter, 'type mismatch'),
         createSubMessage('property type:', unwrapArrayType),
         createSubMessage('custom mapper type:', customMapperReturnType),
       ];
@@ -247,13 +256,17 @@ const detectErrors = (
   // ---------------
   if (!customMapperReturnType) {
     return [
-      createErrorMessage(propertyName, '`@map` decorator required if union type or custom type'),
+      createErrorMessage(
+        propertyName,
+        lineAndCharacter,
+        '`@map` decorator required if union type or custom type'
+      ),
     ];
   }
 
   if (propertyType !== customMapperReturnType) {
     return [
-      createErrorMessage(propertyName, 'type mismatch'),
+      createErrorMessage(propertyName, lineAndCharacter, 'type mismatch'),
       createSubMessage('property type:', propertyType),
       createSubMessage('custom mapper type:', customMapperReturnType),
     ];
@@ -279,9 +292,14 @@ const normalizeCustomMapperReturnType = (customMapperReturnType: string | undefi
     .shift();
 };
 
-const createErrorMessage = (propertyName: string, message: string) =>
-  // prettier-ignore
-  `${chalk.redBright('×')} ${chalk.gray('property:')} ${propertyName}  ${chalk.gray('message:')} ${chalk.redBright(message)}`;
+const createErrorMessage = (
+  propertyName: string,
+  lineAndCharacter: ts.LineAndCharacter,
+  message: string
+) =>
+  `${chalk.redBright('×')} ${chalk.gray('property:')} ${propertyName}${chalk.yellow(
+    `(${lineAndCharacter.line + 1}:${lineAndCharacter.character})`
+  )} ${chalk.gray('message:')} ${chalk.redBright(message)}`;
 
 const createSubMessage = (label: string, message: string) => `   ${chalk.gray(label)} ${message}`;
 
