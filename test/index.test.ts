@@ -37,6 +37,32 @@ test('Mapping with valid values', (): void => {
   expect(actual.getter1).toBe('[test1]');
   expect(err).toBe(undefined);
   expect(t.toNullableString).toBeCalledTimes(1);
+
+  describe('disableKeyConvert is true', () => {
+    const [actual, err] = t.Test.map(
+      {
+        str: 'test1',
+        camelCaseProp: 'test3',
+        num: 1234,
+        bool: true,
+        nil: null,
+        str2: 'test',
+        user: { name: 'user1' },
+        friends: [
+          { name: 'user1', email: 'user1@example.com' },
+          { name: 'user2' },
+          { name: 'user3' },
+        ],
+        arrayOfString: ['test4'],
+        nullableStr: 'test5',
+        hogehoge: 1111,
+      },
+      { disableTransformKeys: true }
+    );
+
+    expect(toJson(actual)).toStrictEqual(toJson(expected));
+    expect(err).toBe(undefined);
+  });
 });
 
 test('Mapping with null values', () => {
