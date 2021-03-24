@@ -1,4 +1,4 @@
-import { TypedJsonMapper as Base, map, Errors } from '../src/';
+import { TypedJsonMapper as Base, map, Errors, ignoreError } from '../src/';
 
 const toNullableString = jest.fn((data: unknown): [string | null, Errors] => {
   const errors: Errors = typeof data === 'number' ? ['data type is number!'] : undefined;
@@ -15,6 +15,7 @@ class Test extends Base {
   num = -1;
   bool = false;
   nil = null;
+  @ignoreError str2 = 'test';
   @map(User) user: User = new User();
   @map(User) friends: User[] = [];
   @map(String) arrayOfString: string[] = [];
