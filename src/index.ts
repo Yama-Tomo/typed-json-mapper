@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 
 const metadataKeyCustomMapper = 'custom:mapper';
+const metadataKeyIgnoreError = 'custom:ignoreError';
 
 type Errors = undefined | string[];
 type CustomMapperFunc = (source: unknown) => [unknown, Errors];
@@ -13,6 +14,10 @@ type CustomMapper =
 
 const map = (mapper: CustomMapper) => (target: TypedJsonMapper, propertyKey: string): void => {
   Reflect.defineMetadata(metadataKeyCustomMapper, mapper, target, propertyKey);
+};
+
+const ignoreError = (target: TypedJsonMapper, propertyKey: string): void => {
+  Reflect.defineMetadata(metadataKeyIgnoreError, true, target, propertyKey);
 };
 
 type Options = {
@@ -40,9 +45,13 @@ const mapData = <T extends typeof TypedJsonMapper>(
 
   Object.keys(instance).forEach((key) => {
     const convertKey = options?.disableTransformKeys === true ? key : toSnakeCase(key);
+    const isIgnoreError = !!Reflect.getMetadata(metadataKeyIgnoreError, instance, key);
 
     if (!hasKey(data, convertKey)) {
-      errors.push(`\`${className}.${key}\` not exists mapping value.`);
+      if (!isIgnoreError) {
+        errors.push(`\`${className}.${key}\` not exists mapping value.`);
+      }
+
       return;
     }
 
@@ -51,7 +60,7 @@ const mapData = <T extends typeof TypedJsonMapper>(
     const customMapper = Reflect.getMetadata(metadataKeyCustomMapper, instance, key);
     const mapData = data[convertKey];
 
-    instance[castKey] = cast(className, mapData, key, type, errors, customMapper);
+    instance[castKey] = cast(className, mapData, key, type, errors, isIgnoreError, customMapper);
   });
 
   return [instance, errors.length > 0 ? errors : undefined];
@@ -86,12 +95,16 @@ const cast = (
   key: string,
   type: ReturnType<typeof getType>,
   errors: string[],
+  isIgnoreError: boolean,
   customMapper?: CustomMapper
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any => {
   if (type === 'array') {
     if (!Array.isArray(data)) {
-      addTypeMismatchError(errors, className, key, type, data);
+      if (!isIgnoreError) {
+        addTypeMismatchError(errors, className, key, type, data);
+      }
+
       return [];
     }
 
@@ -101,7 +114,7 @@ const cast = (
 
     return data.map((element, i) => {
       const [castValue, castErrors] = toCustomType(element, customMapper);
-      if (castErrors) {
+      if (castErrors && !isIgnoreError) {
         addCustomTypeMismatchError(errors, className, `${key}.${i}`, castErrors);
       }
 
@@ -111,7 +124,7 @@ const cast = (
 
   if (customMapper) {
     const [castValue, castErrors] = toCustomType(data, customMapper);
-    if (castErrors) {
+    if (castErrors && !isIgnoreError) {
       addCustomTypeMismatchError(errors, className, key, castErrors);
     }
 
@@ -128,7 +141,7 @@ const cast = (
         ? toBool
         : toNull;
     const [castVal, isCastError] = castFn(data);
-    if (isCastError) {
+    if (isCastError && !isIgnoreError) {
       addTypeMismatchError(errors, className, key, type, data);
     }
 
